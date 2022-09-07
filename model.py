@@ -9,9 +9,9 @@ class PatchEmbeddingBlock(nn.Module):
     def __init__(self, feature_extraction_model = None, num_words : int = 8, emb_size : int = 64): 
         super(PatchEmbeddingBlock, self).__init__()
         self.projection = nn.Sequential(
-            Rearrange('b n c h w -> (b n) c h w'),
+            Rearrange('b n c h w -> (b n) c h w'), # batch_size, num_words, chanels, height, width
             feature_extraction_model if feature_extraction_model is not None else self.__default_model(emb_size), #resnet18
-            Rearrange('(b n) e -> b n e', e = emb_size, n = num_words),
+            Rearrange('(b n) e -> b n e', e = emb_size, n = num_words),#batch_size, num_words, emb_size
         )
         self.cls_token = nn.Parameter(torch.randn(1, 1, emb_size))
         self.positions = nn.Parameter(torch.randn(num_words + 1, emb_size))
@@ -44,7 +44,7 @@ class MultiHeadAttentionBlock(nn.Module):
         attantion = torch.einsum('bhqd, bhkd -> bhqk', queries, keys)
 
         if mask is not None:
-            pass #ooops
+            pass
 
         scaling = self.emb_size ** (1/2)
         attantion = F.softmax(attantion, dim=1) / scaling
